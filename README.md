@@ -1,6 +1,44 @@
 # VideoTube - A NodeJS Video Sharing Platform
 
-VideoTube is a backend for a video sharing platform like YouTube, built with NodeJS, ExpressJS, and MongoDB. It provides a robust set of features for user authentication, video management, social interactions, and more.
+![NodeJS](https://img.shields.io/badge/Node.js-18%2B-green) ![Express](https://img.shields.io/badge/Express-4.x-lightgrey) ![MongoDB](https://img.shields.io/badge/MongoDB-6.0-green) ![License](https://img.shields.io/badge/License-MIT-blue)
+
+VideoTube is a robust, scalable backend for a video-sharing platform modeled after YouTube. Unlike standard CRUD applications, this project handles high concurrency through advanced **Node.js Clustering** and **Database Indexing**, making it production-ready for heavy loads.
+
+---
+
+## 🚀 Key Performance Highlights
+
+This system was engineered to solve the "Single-Threaded Bottleneck" of Node.js.
+
+### ⚡ Optimization Strategy
+
+1.  **Node.js Clustering:** Implemented a Primary-Worker architecture to utilize all CPU cores (12 workers), bypassing the default single-threaded limit.
+2.  **Database Indexing:** Implemented Compound Indexes (ESR Pattern) on MongoDB to ensure sub-second response times for complex sort-and-filter queries.
+
+### 📊 Load Test Results (k6)
+
+Benchmarked on a Ryzen 5 (12-core) machine with 8GB RAM:
+
+- **Concurrency:** Handled **1,000 Simultaneous Users**.
+- **Throughput:** ~25,000 requests/minute.
+- **Latency:** Maintained <600ms average response time under maximum load.
+- **Stability:** **0.00% Error Rate** during stress testing.
+
+### Load Test Summary
+
+_k6 results demonstrating 1k VUs and 0% errors_
+
+![Load Test Result](public/assets/load-test-result.png)
+
+---
+
+## 📂 Database Schema Design
+
+The backend manages complex relationships between Users, Videos, Comments, Tweets, and Playlists. The schema is designed for scalability, utilizing references for relational data and specific indexes for performance.
+
+![Database Schema Diagram](public/assets/db-design.png)
+
+---
 
 ## Features
 
