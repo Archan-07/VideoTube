@@ -9,7 +9,6 @@ export const updateMedia = async ({
   field, // e.g., "thumbnail"
   publicIdField, // e.g., "thumbnailPublicId"
   notFoundMessage = "File is required",
-  selectFields = "", // optional fields to select
 }) => {
   if (!filePath) {
     throw new ApiError(400, notFoundMessage);

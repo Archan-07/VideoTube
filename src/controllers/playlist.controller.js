@@ -75,8 +75,8 @@ const addVideoToPlaylist = asyncHandler(async (req, res) => {
   }
 
   const addToPlaylist = await Playlist.findOneAndUpdate(
-    { _id: playlistId, owner: req.user._id }, // Ensure ownership in query
-    { $addToSet: { videos: videoId } }, // $addToSet prevents duplicates automatically
+    { _id: playlistId, owner: req.user._id }, 
+    { $addToSet: { videos: videoId } },
     { new: true }
   );
 

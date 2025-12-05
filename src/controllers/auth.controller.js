@@ -8,7 +8,6 @@ import {
 } from "../utils/cloudinary.js";
 import jwt from "jsonwebtoken";
 import mongoose, { isValidObjectId } from "mongoose";
-import Logger from "../utils/logger.js";
 import { updateMedia } from "../utils/updateMedia.js";
 const generateAccessRefreshTokens = async (userId) => {
   try {
@@ -28,8 +27,6 @@ const generateAccessRefreshTokens = async (userId) => {
 };
 
 const registerUser = asyncHandler(async (req, res) => {
-  Logger.info("hello");
-
   const { username, email, fullName, password } = req.body;
 
   const existedUser = await User.findOne({
@@ -50,7 +47,6 @@ const registerUser = asyncHandler(async (req, res) => {
   let avatar;
   try {
     avatar = await uploadOnCloudinary(avatarLocalPath);
-    Logger.info(`Avatar uploaded successfully: ${avatar.public_id}`);
   } catch (error) {
     Logger.error(`Error uploading avatar: ${error.message}`);
     throw new ApiError(500, "Failed to upload avatar");
@@ -59,9 +55,6 @@ const registerUser = asyncHandler(async (req, res) => {
   try {
     if (coverImageLocalPath) {
       coverImage = await uploadOnCloudinary(coverImageLocalPath);
-      Logger.info(`Uploaded cover image: ${coverImage.public_id}`);
-    } else {
-      Logger.info("No cover image provided");
     }
   } catch (error) {
     Logger.error(`Error uploading cover image: ${error.message}`);
@@ -124,8 +117,6 @@ const loginUser = asyncHandler(async (req, res) => {
   if (!user) {
     throw new ApiError(404, "User not found");
   }
-
-  // validate password
 
   const isPasswordValid = await user.isPasswordCorrect(password);
   if (!isPasswordValid) {
@@ -241,8 +232,6 @@ const changePassword = asyncHandler(async (req, res) => {
   if (!isPasswordValid) {
     throw new ApiError(401, "Current password is incorrect");
   }
-  // Add logic to update the password here
-
   user.password = newPassword;
   await user.save({ validateBeforeSave: false });
   return res
@@ -317,7 +306,6 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
     { $match: { username: username.trim().toLowerCase() } },
     {
       $lookup: {
-        // which users are subscribed to this channel
         from: "subscriptions",
         localField: "_id",
         foreignField: "channel",
@@ -326,7 +314,6 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
     },
     {
       $lookup: {
-        // where this user is subscribed
         from: "subscriptions",
         localField: "_id",
         foreignField: "subscriber",
@@ -349,7 +336,6 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
       },
     },
     {
-      // Project only necessary fields
       $project: {
         fullName: 1,
         username: 1,
@@ -403,8 +389,6 @@ const addToWatchHistory = asyncHandler(async (req, res) => {
     throw new ApiError(404, "User not found");
   }
 
-  Logger.debug(`User watch history updated: ${user}`);
-
   return res
     .status(200)
     .json(
@@ -420,7 +404,6 @@ const getWatchHistory = asyncHandler(async (req, res) => {
   const user = await User.aggregate([
     { $match: { _id: new mongoose.Types.ObjectId(req.user._id) } },
     {
-      // lookup to get watch history videos
       $lookup: {
         from: "videos",
         localField: "watchHistory",
@@ -428,7 +411,6 @@ const getWatchHistory = asyncHandler(async (req, res) => {
         as: "watchHistoryVideos",
         pipeline: [
           {
-            // lookup to get owner details from videos collection
             $lookup: {
               from: "users",
               localField: "owner",
@@ -436,7 +418,6 @@ const getWatchHistory = asyncHandler(async (req, res) => {
               as: "ownerDetails",
               pipeline: [
                 {
-                  // Project only necessary fields from owner details
                   $project: {
                     fullName: 1,
                     username: 1,
@@ -453,7 +434,6 @@ const getWatchHistory = asyncHandler(async (req, res) => {
   if (user.length === 0) {
     throw new ApiError(404, "User not found");
   }
-  Logger.debug(`User watch history fetched: ${user}`);
 
   return res
     .status(200)
@@ -472,7 +452,6 @@ const deleteUserAccount = asyncHandler(async (req, res) => {
     throw new ApiError(404, "User not found");
   }
 
-  // Delete user's avatar and cover image from Cloudinary
   try {
     if (user.avatarPublicId) {
       await deleteFromCloudinary(user.avatarPublicId);

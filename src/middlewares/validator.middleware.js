@@ -7,11 +7,9 @@ export const validate = (req, res, next) => {
 
   if (errors.isEmpty()) return next();
 
-  // --- ADD THIS LINE TO DEBUG ---
   Logger.warn(
     `❌ Validation Failed: ${JSON.stringify(errors.array(), null, 2)}`
   );
-  // ------------------------------
   const extractedErrors = [];
   errors.array().map((err) => extractedErrors.push({ [err.path]: err.msg }));
 

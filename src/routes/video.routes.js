@@ -17,7 +17,6 @@ import { upload } from "../middlewares/multer.middlewares.js";
 
 const router = Router();
 
-// Import video controller functions
 
 router.route("/publish-video").post(
   verifyJWT,
@@ -40,13 +39,10 @@ router
   .route("/toggle-publish-status/:videoId")
   .patch(verifyJWT, togglePublishStatus);
 
-// Get videos by user
 router.route("/get-user-videos/:userId").get(verifyJWT, getUserVideos);
 
-// Get trending videos
 router.route("/trending").get(getTrendingVideos);
 
-// Search videos
 router.route("/search/query").get(searchVideos);
 
 export default router;

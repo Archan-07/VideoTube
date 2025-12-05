@@ -7,13 +7,8 @@ const connectDB = async () => {
     const connectionInstance = await mongoose.connect(
       `${process.env.MONGO_URI}/${DB_NAME}`,
       {
-        // ADD THIS LINE:
-        maxPoolSize: 50, // Only allow 50 open connections to DB at once
-        // This forces the 1000 users to queue up and share these 50 connections
+        maxPoolSize: 50,
       }
-    );
-    Logger.info(
-      `MongoDB connected ! DB host : ${connectionInstance.connection.host}`
     );
   } catch (error) {
     Logger.error(`MongoDB connection error: ${error}`);

@@ -23,10 +23,6 @@ const toggleSubscription = asyncHandler(async (req, res) => {
   });
 
   if (existingSubscription) {
-    // UNSUBSCRIBE LOGIC
-    // 1. Delete the subscription document
-    // 2. Decrement channel's subscriber count
-    // 3. Decrement user's "subscribed to" count
 
     await Promise.all([
       Subscription.findByIdAndDelete(existingSubscription._id),
@@ -39,10 +35,6 @@ const toggleSubscription = asyncHandler(async (req, res) => {
       .status(200)
       .json(new ApiResponse(200, {}, "Unsubscribed successfully"));
   } else {
-    // SUBSCRIBE LOGIC
-    // 1. Create the subscription document
-    // 2. Increment channel's subscriber count
-    // 3. Increment user's "subscribed to" count
 
     await Promise.all([
       Subscription.create({
@@ -60,7 +52,6 @@ const toggleSubscription = asyncHandler(async (req, res) => {
   }
 });
 
-// controller to return subscriber list of a channel
 const getUserChannelSubscribers = asyncHandler(async (req, res) => {
   const { channelId } = req.params;
   const { page = 1, limit = 10 } = req.query;
@@ -76,8 +67,8 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
   })
     .select("subscriber")
     .populate("subscriber", "username avatar")
-    .skip((page - 1) * limit) // Skip previous pages
-    .limit(parseInt(limit)); // Only fetch 10
+    .skip((page - 1) * limit) 
+    .limit(parseInt(limit));
 
   const subscribers = subscribersPipeline.map((item) => item.subscriber);
 
@@ -94,7 +85,6 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
     );
 });
 
-// controller to return channel list to which user has subscribed
 const getSubscribedChannels = asyncHandler(async (req, res) => {
   const { subscriberId } = req.params;
 

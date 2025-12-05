@@ -4,7 +4,6 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
-// Get comments for a specific video with pagination
 
 const getVideoComments = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
@@ -132,7 +131,6 @@ const deleteComment = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, comment, "Comment deleted successfully"));
 });
 
-// get comments for a specific tweet with pagination
 
 const getTweetComments = asyncHandler(async (req, res) => {
   const { tweetId } = req.params;

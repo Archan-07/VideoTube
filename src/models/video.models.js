@@ -29,8 +29,8 @@ const videoSchema = new Schema(
       type: Number,
       default: 0,
     },
-    likesCount: { type: Number, default: 0 }, // Add this
-    commentsCount: { type: Number, default: 0 }, // Add this
+    likesCount: { type: Number, default: 0 },
+    commentsCount: { type: Number, default: 0 },
     duration: {
       type: Number,
       required: true,

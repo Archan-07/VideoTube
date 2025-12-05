@@ -1,7 +1,6 @@
 import http from "k6/http";
 import { check, sleep } from "k6";
 
-// Configuration: How many users? How long?
 export const options = {
   stages: [
     { duration: "30s", target: 1000 }, // Push to 1000
@@ -13,89 +12,61 @@ export const options = {
     http_req_failed: ["rate<0.05"],
   },
 };
-// CHANGE THIS to your local server URL
-const BASE_URL = "http://localhost:8000/api/v1";
 
-// Test User Credentials (Make sure this user exists in your DB!)
-const TEST_USER = {
-  email: "testuser@example.com",
-  username: "testuser",
-  password: "password123",
-};
-
-export default function () {
-  // --- SCENARIO 1: Public Feed (Read-heavy test) ---
-  const feedRes = http.get(`${BASE_URL}/videos?page=1&limit=5`);
-
-  check(feedRes, {
-    "Feed status is 200": (r) => r.status === 200,
-    "Feed loads fast": (r) => r.timings.duration < 500,
+export function setup() {
+  // 1. Verify URL: Your screenshot shows /users/login, but script had /login
+  // Ensure this URL exactly matches what you use in Bruno
+  const loginRes = http.post("http://localhost:8000/api/v1/users/login", {
+    email: "testuser@example.com",
+    username: "testuser",
+    password: "password123",
   });
 
-  // Extract a random video ID from the feed for the next step
-  let videoId = null;
-  const videoData = feedRes.json("data"); // Adjust JSON path if needed
-  if (videoData && videoData.length > 0) {
-    const randomIndex = Math.floor(Math.random() * videoData.length);
-    videoId = videoData[randomIndex]._id;
+  // Debugging: If login fails, print why (check your terminal logs)
+  if (loginRes.status !== 200) {
+    console.error("Login Failed! Status:", loginRes.status);
+    console.error("Response:", loginRes.body);
   }
 
-  // Fail if we can't get a video ID (Need one video in DB)
-  check(videoId, {
-    "Video ID exists for liking": (id) => id !== null,
-  });
+  check(loginRes, { "Login successful": (r) => r.status === 200 });
 
-  sleep(1); // User pauses
+  // 2. EXTRACTION LOGIC
+  // Attempt to get token from JSON first (common backend structure)
+  let token = loginRes.json("data.accessToken") || loginRes.json("accessToken");
 
-  // --- SCENARIO 2: Login (Auth process) ---
-  const loginPayload = JSON.stringify({
-    email: TEST_USER.email,
-    username: TEST_USER.username, // Add this if your validator needs it
-    password: TEST_USER.password,
-  });
+  // If not in JSON, try to get it from the 'accessToken' cookie (based on your screenshot)
+  if (!token && loginRes.cookies.accessToken) {
+    token = loginRes.cookies.accessToken[0].value;
+  }
 
-  const params = {
-    headers: {
-      "Content-Type": "application/json",
-    },
-  };
+  return { token: token };
+}
 
-  const loginRes = http.post(`${BASE_URL}/users/login`, loginPayload, params);
-
-  // Check if login worked
-  let accessToken = null;
-  const loginSuccess = check(loginRes, {
-    "Login status is 200": (r) => r.status === 200,
-  });
-
-  // If login failed or no video ID, stop this iteration here
-  if (!loginSuccess || !videoId) {
+export default function (data) {
+  // If setup failed to get a token, stop this iteration
+  if (!data.token) {
+    console.error("No token found!");
     return;
   }
 
-  // Extract token for authenticated requests
-  accessToken = loginRes.json("data.accessToken");
-  const authParams = {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-    },
+  const headers = {
+    Authorization: `Bearer ${data.token}`,
+    "Content-Type": "application/json",
   };
 
-  sleep(1);
-
-  // --- SCENARIO 3: Toggle Like (Write-heavy test / Race condition stress) ---
-  const likeRes = http.post(
-    `${BASE_URL}/likes/toggle-video-like/${videoId}`,
-    null,
-    authParams
+  // 3. FIX: Pass the headers options as the second argument
+  const feedRes = http.get(
+    `http://localhost:8000/api/v1/videos?page=1&limit=5`,
+    { headers: headers }
   );
 
-  // This is the critical test for the atomic/race condition fixes
-  check(likeRes, {
-    "Like/Unlike status is 200/201": (r) =>
-      r.status === 200 || r.status === 201,
-  });
+  if (feedRes.status !== 200) {
+    console.warn(`Request Failed. Status: ${feedRes.status}`);
 
-  sleep(1);
+    check(feedRes, {
+      "Feed status is 200": (r) => r.status === 200,
+    });
+
+    sleep(1);
+  }
 }

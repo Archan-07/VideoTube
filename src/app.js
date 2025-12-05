@@ -2,14 +2,16 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import rateLimit from "express-rate-limit";
+import morgan from "morgan";
 
 const app = express();
 
-// Set rate limiter
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  limit: 100, // <--- THIS IS THE PROBLEM
+  windowMs: 15 * 60 * 1000,
+  limit: 100,
 });
+
+app.use(morgan("dev"));
 
 // app.use(limiter);
 app.use(
@@ -21,7 +23,6 @@ app.use(
 
 app.use(cookieParser());
 
-// Common middlewares
 app.use(
   express.json({
     limit: "16kb",
@@ -36,11 +37,6 @@ app.use(
 
 app.use(express.static("public"));
 
-app.use;
-
-// Import routes
-
-// import healthCheckRouter from "./routes/healthCheck.routes.js";
 import authRouter from "./routes/auth.routes.js";
 import { errorHandler } from "./middlewares/error.middleware.js";
 import videoRouter from "./routes/video.routes.js";
@@ -51,9 +47,6 @@ import playlistRouter from "./routes/playlist.routes.js";
 import subscriptionRouter from "./routes/subscription.routes.js";
 import dashboardRouter from "./routes/dashboard.routes.js";
 
-// Routes
-
-// app.use("/api/v1", healthCheckRouter);
 app.use("/api/v1/users", authRouter);
 app.use("/api/v1/videos", videoRouter);
 app.use("/api/v1/likes", likeRouter);

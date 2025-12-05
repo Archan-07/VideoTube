@@ -2,7 +2,6 @@ import { body } from "express-validator";
 
 const userRegisterValidator = () => {
   return [
-    // Email
     body("email")
       .trim()
       .notEmpty()
@@ -11,7 +10,6 @@ const userRegisterValidator = () => {
       .withMessage("Invalid email format")
       .normalizeEmail(),
 
-    // Full Name
     body("fullName")
       .trim()
       .notEmpty()
@@ -19,7 +17,6 @@ const userRegisterValidator = () => {
       .isLength({ min: 3 })
       .withMessage("Full Name must be at least 3 characters"),
 
-    // Username
     body("username")
       .trim()
       .notEmpty()
@@ -33,7 +30,6 @@ const userRegisterValidator = () => {
       .isLength({ min: 3, max: 20 })
       .withMessage("Username must be 3–20 characters long"),
 
-    // Password
     body("password")
       .trim()
       .notEmpty()
@@ -48,23 +44,6 @@ const userRegisterValidator = () => {
       .withMessage(
         "Password must be at least 6 characters and contain at least one number"
       ),
-
-    // Avatar (optional)
-    // body("avatar").custom((value, { req }) => {
-    //   const avatar = req.file;
-    //   if (!avatar) {
-    //     throw new Error("Avatar is required");
-    //   }
-    //   const allowedFormats = ["image/jpeg", "image/png", "image/gif"];
-    //   if (!allowedFormats.includes(avatar.mimetype)) {
-    //     throw new Error("Avatar must be a .jpg, .png, or .gif file");
-    //   }
-    //   if (avatar.size > 5 * 1024 * 1024) {
-    //     // 5 MB size limit
-    //     throw new Error("Avatar size must be less than 5MB");
-    //   }
-    //   return true;
-    // }),
   ];
 };
 

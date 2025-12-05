@@ -91,7 +91,6 @@ const updateTweet = asyncHandler(async (req, res) => {
     throw new ApiError(403, "You are not authorized to update this tweet");
   }
 
-  // Update tweet content
 
   tweet.content = content || tweet.content;
   await tweet.save();
