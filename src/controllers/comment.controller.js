@@ -294,10 +294,14 @@ const addNestedComment = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Invalid comment ID");
   }
 
+  const parentCommentId = new mongoose.Types.ObjectId(commentId);
+
   const newComment = await Comment.create({
     content,
     comment: commentId,
     owner: req.user._id,
+    video: parentCommentId.video || undefined,
+    tweet: parentCommentId.tweet || undefined,
   });
 
   return res
@@ -357,8 +361,6 @@ const getNestedComment = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, replies, "Replies fetched successfully"));
 });
-
-
 
 export {
   getVideoComments,
