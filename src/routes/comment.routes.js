@@ -1,9 +1,11 @@
 import { Router } from "express";
 import {
   addComment,
+  addNestedComment,
   addTweetComment,
   deleteComment,
   deleteTweetComment,
+  getNestedComment,
   getTweetComments,
   getVideoComments,
   updateComment,
@@ -39,5 +41,11 @@ router
 router
   .route("/delete-tweet-comment/:commentId")
   .delete(verifyJWT, deleteTweetComment);
+
+router
+  .route("/add-nested-comment/:commentId")
+  .post(verifyJWT, validate(commentValidationSchema), addNestedComment);
+router.route("/get-nested-comment-by-parentCommentId/:commentId").get(getNestedComment);
+
 
 export default router;

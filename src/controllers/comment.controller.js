@@ -1,9 +1,9 @@
-import mongoose from "mongoose";
+import mongoose, { isValidObjectId } from "mongoose";
 import { Comment } from "../models/comment.models.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-
+import { is, th } from "zod/locales";
 
 const getVideoComments = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
@@ -14,7 +14,7 @@ const getVideoComments = asyncHandler(async (req, res) => {
 
   const comments = await Comment.aggregate([
     {
-      $match: { video: videoObjectId },
+      $match: { video: videoObjectId, comment: { $exists: false } },
     },
     { $sort: sortOptions },
     { $skip: (page - 1) * parseInt(limit) },
@@ -42,6 +42,31 @@ const getVideoComments = asyncHandler(async (req, res) => {
       },
     },
     {
+      $lookup: {
+        from: "comments",
+        localField: "_id",
+        foreignField: "comment",
+        as: "replies",
+      },
+    },
+
+    {
+      $lookup: {
+        from: "videos",
+        localField: "video",
+        foreignField: "_id",
+        pipeline: [
+          {
+            $project: {
+              commentsCount: 1,
+            },
+          },
+        ],
+        as: "videoDetails",
+      },
+    },
+
+    {
       $project: {
         content: 1,
         video: 1,
@@ -50,9 +75,11 @@ const getVideoComments = asyncHandler(async (req, res) => {
           username: "$ownerDetails.username",
           avatar: "$ownerDetails.avatar",
         },
+        replies: 1,
         createdAt: 1,
         updatedAt: 1,
         likesCount: { $size: "$likes" },
+        repliesCount: { $size: "$replies" },
       },
     },
   ]);
@@ -130,7 +157,6 @@ const deleteComment = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, comment, "Comment deleted successfully"));
 });
-
 
 const getTweetComments = asyncHandler(async (req, res) => {
   const { tweetId } = req.params;
@@ -260,6 +286,80 @@ const deleteTweetComment = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, null, "Comment deleted successfully"));
 });
 
+const addNestedComment = asyncHandler(async (req, res) => {
+  const { commentId } = req.params;
+  const { content } = req.body;
+
+  if (!isValidObjectId(commentId)) {
+    throw new ApiError(400, "Invalid comment ID");
+  }
+
+  const newComment = await Comment.create({
+    content,
+    comment: commentId,
+    owner: req.user._id,
+  });
+
+  return res
+    .status(201)
+    .json(
+      new ApiResponse(201, newComment, "Nested comment added successfully")
+    );
+});
+
+const getNestedComment = asyncHandler(async (req, res) => {
+  const { commentId } = req.params;
+  const { page = 1, limit = 10 } = req.query;
+
+  if (!isValidObjectId(commentId)) {
+    throw new ApiError(400, "Invalid comment ID");
+  }
+
+  const parentCommentId = new mongoose.Types.ObjectId(commentId);
+
+  const replies = await Comment.aggregate([
+    { $match: { comment: parentCommentId } },
+    { $sort: { createdAt: 1 } }, // Usually replies are Oldest -> Newest
+    { $skip: (page - 1) * parseInt(limit) },
+    { $limit: parseInt(limit) },
+    {
+      $lookup: {
+        from: "users",
+        localField: "owner",
+        foreignField: "_id",
+        as: "ownerDetails",
+      },
+    },
+    { $unwind: "$ownerDetails" },
+    {
+      $lookup: {
+        from: "likes",
+        localField: "_id",
+        foreignField: "comment",
+        as: "likes",
+      },
+    },
+    {
+      $project: {
+        content: 1,
+        video: 1,
+        createdAt: 1,
+        owner: {
+          username: "$ownerDetails.username",
+          avatar: "$ownerDetails.avatar",
+          _id: "$ownerDetails._id",
+        },
+        likesCount: { $size: "$likes" },
+      },
+    },
+  ]);
+  return res
+    .status(200)
+    .json(new ApiResponse(200, replies, "Replies fetched successfully"));
+});
+
+
+
 export {
   getVideoComments,
   addComment,
@@ -269,4 +369,6 @@ export {
   addTweetComment,
   updateTweetComment,
   deleteTweetComment,
+  addNestedComment,
+  getNestedComment,
 };

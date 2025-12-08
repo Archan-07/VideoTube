@@ -9,6 +9,7 @@ import {
 } from "../utils/cloudinary.js";
 import { Like } from "../models/like.models.js";
 import { updateMedia } from "../utils/updateMedia.js";
+import { Comment } from "../models/comment.models.js";
 
 const getAllVideos = asyncHandler(async (req, res) => {
   const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query;
@@ -26,8 +27,6 @@ const getAllVideos = asyncHandler(async (req, res) => {
     createdAt: sortBy === "createdAt" ? (sortType === "desc" ? -1 : 1) : -1,
     views: sortBy === "views" ? (sortType === "desc" ? -1 : 1) : -1,
   };
-
-  const currentUserId = req.user?._id ?? null;
 
   const videos = await Video.aggregate([
     { $match: filter },
@@ -128,9 +127,12 @@ const getVideoById = asyncHandler(async (req, res) => {
     ? Boolean(await Like.exists({ video: video._id, likedBy: currentUserId }))
     : false;
 
+  const commentsCount = await Comment.countDocuments({ video: video._id });
+
   const videoObj = video.toObject();
   videoObj.likesCount = likesCount;
   videoObj.isLiked = isLiked;
+  videoObj.commentsCount = commentsCount;
 
   return res
     .status(200)
