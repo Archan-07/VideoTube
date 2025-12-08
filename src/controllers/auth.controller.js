@@ -44,6 +44,10 @@ const registerUser = asyncHandler(async (req, res) => {
   const avatarLocalPath = req.files?.avatar?.[0]?.path;
   const coverImageLocalPath = req.files?.coverImage?.[0]?.path;
 
+  if (!avatarLocalPath) {
+    throw new ApiError(400, "Avatar is required");
+  }
+
   let avatar;
   try {
     avatar = await uploadOnCloudinary(avatarLocalPath);
@@ -270,6 +274,9 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
 });
 
 const updateAvatar = asyncHandler(async (req, res) => {
+  if (!req.file) {
+    throw new ApiError(400, "Avatar is required");
+  }
   const user = await updateMedia({
     model: User,
     docId: req.user._id,
@@ -284,8 +291,12 @@ const updateAvatar = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, { user }, "Avatar updated successfully"));
 });
 const updateCoverImage = asyncHandler(async (req, res) => {
+  if (!req.file) {
+    throw new ApiError(400, "Cover image is required");
+  }
   const user = await updateMedia({
-    userId: req.user._id,
+    model: User,
+    docId: req.user._id,
     filePath: req.file?.path,
     field: "coverImage",
     publicIdField: "coverImagePublicId",

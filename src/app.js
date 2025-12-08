@@ -13,7 +13,7 @@ const limiter = rateLimit({
 
 app.use(morgan("dev"));
 
-// app.use(limiter);
+app.use(limiter);
 app.use(
   cors({
     origin: process.env.CORS_ORIGIN,
@@ -38,7 +38,6 @@ app.use(
 app.use(express.static("public"));
 
 import authRouter from "./routes/auth.routes.js";
-import { errorHandler } from "./middlewares/error.middleware.js";
 import videoRouter from "./routes/video.routes.js";
 import likeRouter from "./routes/like.routes.js";
 import commentRouter from "./routes/comment.routes.js";
@@ -56,5 +55,4 @@ app.use("/api/v1/playlists", playlistRouter);
 app.use("/api/v1/subscriptions", subscriptionRouter);
 app.use("/api/v1/dashboard", dashboardRouter);
 
-// app.use(errorHandler);
 export { app };

@@ -9,13 +9,13 @@ import {
   updatePlaylist,
 } from "../controllers/playlist.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
-import { playlistValidator } from "../validators/playlist.validator.js";
+import { plyalistValidationSchema } from "../validators/playlist.validator.js";
 import { validate } from "../middlewares/validator.middleware.js";
 const router = Router();
 
 router
   .route("/create-playlist")
-  .post(verifyJWT, playlistValidator(), validate, createPlaylist);
+  .post(verifyJWT, validate(plyalistValidationSchema), createPlaylist);
 
 router.route("/get-user-playlists/:userId").get(getUserPlaylists);
 router.route("/get-playlist-by-id/:playlistId").get(getPlaylistById);
@@ -27,7 +27,7 @@ router
   .post(verifyJWT, removeVideoFromPlaylist);
 router
   .route("/update-playlist/:playlistId")
-  .put(verifyJWT, playlistValidator(), validate, updatePlaylist);
+  .put(verifyJWT, validate(plyalistValidationSchema), updatePlaylist);
 router.route("/delete-playlist/:playlistId").delete(verifyJWT, deletePlaylist);
 
 export default router;

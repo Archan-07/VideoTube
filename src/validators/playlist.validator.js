@@ -1,18 +1,15 @@
-import { body } from "express-validator";
+import z from "zod";
 
-const playlistValidator = () => {
-  return [
-    body("name")
-      .notEmpty()
-      .withMessage("Playlist name is required")
-      .isLength({ min: 3, max: 50 })
-      .withMessage("Playlist name must be between 3 and 50 characters"),
+const plyalistValidationSchema = z.object({
+  name: z
+    .string()
+    .min(3, "Playlist name must be at least 3 characters")
+    .max(20, "Playlist name can be up to 20 characters long"),
 
-    body("description")
-      .optional()
-      .isLength({ max: 300 })
-      .withMessage("Description can be up to 300 characters long"),
-  ];
-};
+  description: z
+    .string()
+    .min(3, "Description must be at least 3 characters")
+    .max(300, "Description can be up to 300 characters long"),
+});
 
-export { playlistValidator };
+export { plyalistValidationSchema };

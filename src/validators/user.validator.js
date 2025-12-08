@@ -1,101 +1,125 @@
-import { body } from "express-validator";
+import { z } from "zod";
 
-const userRegisterValidator = () => {
-  return [
-    body("email")
-      .trim()
-      .notEmpty()
-      .withMessage("Email is required")
-      .isEmail()
-      .withMessage("Invalid email format")
-      .normalizeEmail(),
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ACCEPTED_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+];
 
-    body("fullName")
-      .trim()
-      .notEmpty()
-      .withMessage("Full Name is required")
-      .isLength({ min: 3 })
-      .withMessage("Full Name must be at least 3 characters"),
+const imageSchema = z.object({
+  fieldname: z.string(),
+  originalname: z.string(),
+  encoding: z.string(),
+  mimetype: z.enum(ACCEPTED_IMAGE_TYPES, {
+    errorMap: () => ({
+      message: "Only .jpg, .jpeg, .png and .webp formats are supported.",
+    }),
+  }),
+  size: z.number().max(MAX_FILE_SIZE, { message: "Max file size is 5MB." }),
+});
 
-    body("username")
-      .trim()
-      .notEmpty()
-      .withMessage("Username is required")
-      .isLowercase()
-      .withMessage("Username must be lowercase")
-      .matches(/^[a-z0-9_]+$/)
-      .withMessage(
-        "Username can only contain letters, numbers, and underscores"
-      )
-      .isLength({ min: 3, max: 20 })
-      .withMessage("Username must be 3–20 characters long"),
+const userRegisterSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .email({ message: "Invalid email formate" })
+    .toLowerCase(),
 
-    body("password")
-      .trim()
-      .notEmpty()
-      .withMessage("Password is required")
-      .isStrongPassword({
-        minLength: 6,
-        minLowercase: 1,
-        minUppercase: 0,
-        minNumbers: 1,
-        minSymbols: 0,
-      })
-      .withMessage(
-        "Password must be at least 6 characters and contain at least one number"
-      ),
-  ];
-};
+  fullName: z.string().min(3, "Full Name must be at least 3 characters"),
 
-const userLoginValidator = () => {
-  return [
-    body("email")
-      .trim()
-      .notEmpty()
-      .withMessage("Email is required")
-      .isEmail()
-      .withMessage("Invalid email format"),
-    body("username").trim().notEmpty().withMessage("Username is required"),
+  username: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .min(3, { message: "Username must be 3-20 characters long" })
+    .max(20, { message: "Username must be 3-20 characters long" })
+    .regex(/^[a-z0-9_]+$/, {
+      message: "Username can only contain letters, numbers, and underscores",
+    }),
 
-    body("password").trim().notEmpty().withMessage("Password is required"),
-  ];
-};
+  password: z
+    .string()
+    .trim()
+    .min(6, { message: "Password must be at least 6 characters" })
+    .regex(/[0-9]/, { message: "Password must contain at least one number" }),
 
-const changePasswordValidator = () => {
-  return [
-    body("currentPassword")
-      .trim()
-      .notEmpty()
-      .withMessage("Old password is required"),
-    body("newPassword")
-      .trim()
-      .notEmpty()
-      .withMessage("New password is required"),
-  ];
-};
+  avatar: z
+    .any()
+    .refine((files) => files && files?.length >= 1, {
+      message: "Avatar image is required",
+    })
+    .pipe(z.array(imageSchema).max(1, "Only one avatar allowed")),
 
-const updateAccountDetailsValidator = () => {
-  return [
-    body("email")
-      .trim()
-      .notEmpty()
-      .withMessage("Email is required")
-      .isEmail()
-      .withMessage("Invalid email format")
-      .normalizeEmail(),
+  coverImage: z
+    .array(imageSchema)
+    .optional()
+    .refine(
+      (files) => !files || files.length <= 1,
+      "Only one cover image allowed"
+    ),
+});
 
-    body("fullName")
-      .trim()
-      .notEmpty()
-      .withMessage("Full Name is required")
-      .isLength({ min: 3 })
-      .withMessage("Full Name must be at least 3 characters"),
-  ];
-};
+const userLoginSchema = z
+  .object({
+    email: z.string().trim().email().optional(),
+    username: z.string().trim().optional(),
+    password: z.string().trim().min(1, { message: "Password is required" }),
+  })
+  .refine((data) => data.email || data.username, {
+    message: "Username or Email is required",
+    path: ["username"],
+  });
 
+const changePasswordSchema = z.object({
+  currentPassword: z
+    .string()
+    .trim()
+    .min(1, { message: "Old password is required" }),
+  newPassword: z
+    .string()
+    .trim()
+    .min(6, { message: "New password must contain at least 6 characters" })
+    .regex(/[0-9]/, {
+      message: "New password must contain at least one number",
+    }),
+});
+
+const updateAccountDetailsSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .email({ message: "Invalid email format" })
+    .toLowerCase(),
+
+  fullName: z
+    .string()
+    .trim()
+    .min(3, { message: "Full Name must be at least 3 characters" }),
+});
+
+const updateAvatarSchema = z.object({
+  avatar: z
+    .any()
+    .refine((file) => file && file.length > 0, {
+      message: "Avatar image is required",
+    })
+    .pipe(z.array(imageSchema).max(1, "Only one avatar allowed")),
+});
+const updatecoverImageSchema = z.object({
+  coverImage: z
+    .any()
+    .refine((file) => file && file.length > 0, {
+      message: "CoverImage image is required",
+    })
+    .pipe(z.array(imageSchema).max(1, "Only one coverImage allowed")),
+});
 export {
-  userRegisterValidator,
-  userLoginValidator,
-  changePasswordValidator,
-  updateAccountDetailsValidator,
+  userRegisterSchema,
+  userLoginSchema,
+  changePasswordSchema,
+  updateAccountDetailsSchema,
+  updateAvatarSchema,
+  updatecoverImageSchema,
 };

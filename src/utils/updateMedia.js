@@ -10,6 +10,12 @@ export const updateMedia = async ({
   publicIdField, // e.g., "thumbnailPublicId"
   notFoundMessage = "File is required",
 }) => {
+  if (!model) {
+    throw new Error(
+      "updateMedia Error: Mongoose 'model' is missing. Check your imports."
+    );
+  }
+
   if (!filePath) {
     throw new ApiError(400, notFoundMessage);
   }

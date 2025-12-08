@@ -9,7 +9,7 @@ import {
   updateComment,
   updateTweetComment,
 } from "../controllers/comment.controller.js";
-import { commentValidator } from "../validators/comment.validator.js";
+import { commentValidationSchema } from "../validators/comment.validator.js";
 import { validate } from "../middlewares/validator.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
@@ -18,11 +18,11 @@ const router = Router();
 router.route("/get-comments-by-video/:videoId").get(getVideoComments);
 router
   .route("/add-comment/:videoId")
-  .post(commentValidator(), validate, verifyJWT, addComment);
+  .post(verifyJWT, validate(commentValidationSchema), addComment);
 
 router
   .route("/update-comment/:commentId")
-  .put(commentValidator(), validate, verifyJWT, updateComment);
+  .put(verifyJWT, validate(commentValidationSchema), updateComment);
 
 router.route("/delete-comment/:commentId").delete(verifyJWT, deleteComment);
 
@@ -30,11 +30,11 @@ router.route("/delete-comment/:commentId").delete(verifyJWT, deleteComment);
 router.route("/get-comments-by-tweet/:tweetId").get(getTweetComments);
 router
   .route("/add-tweet-comment/:tweetId")
-  .post(commentValidator(), validate, verifyJWT, addTweetComment);
+  .post(verifyJWT, validate(commentValidationSchema), addTweetComment);
 
 router
   .route("/update-tweet-comment/:commentId")
-  .put(commentValidator(), validate, verifyJWT, updateTweetComment);
+  .put(verifyJWT, validate(commentValidationSchema), updateTweetComment);
 
 router
   .route("/delete-tweet-comment/:commentId")

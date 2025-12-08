@@ -1,15 +1,10 @@
-import { body } from "express-validator";
+import z from "zod";
 
-const tweetValidator = () => {
-  return [
-    body("content")
-      .notEmpty()
-      .withMessage("Content is required")
-      .isString()
-      .withMessage("Content must be a string")
-      .isLength({ min: 1, max: 280 })
-      .withMessage("Content must be between 1 and 280 characters"),
-  ];
-};
+const tweetValidationSchema = z.object({
+  content: z
+    .string()
+    .min(1, "Content is required")
+    .max(280, "Content must be between 1 and 280 characters"),
+});
 
-export { tweetValidator };
+export { tweetValidationSchema };

@@ -169,12 +169,12 @@ const updateVideo = asyncHandler(async (req, res) => {
     updateData.thumbnail = updateVideo.thumbnail;
     updateData.thumbnailPublicId = updateVideo.thumbnailPublicId;
   }
-  updateVideo = await Video.findByIdAndUpdate(videoId, updateData, {
+  updatedVideo = await Video.findByIdAndUpdate(videoId, updateData, {
     new: true,
   });
   return res
     .status(200)
-    .json(new ApiResponse(200, updateVideo, "Video updated successfully"));
+    .json(new ApiResponse(200, updatedVideo, "Video updated successfully"));
 });
 
 const deleteVideo = asyncHandler(async (req, res) => {

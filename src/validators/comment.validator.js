@@ -1,12 +1,10 @@
-import { body } from "express-validator";
+import z from "zod";
 
-const commentValidator = () => {
-  return [
-    body("content")
-      .trim()
-      .notEmpty()
-      .withMessage("Comment content is required"),
-  ];
-};
+const commentValidationSchema = z.object({
+  content: z
+    .string()
+    .min(1, "Content is required")
+    .max(280, "Content must be between 1 and 280 characters"),
+});
 
-export { commentValidator };
+export { commentValidationSchema };
